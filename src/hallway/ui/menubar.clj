@@ -1,6 +1,6 @@
 (ns hallway.ui.menubar
   (:require [hallway.ui.report :as report])
-  (:use seesaw.core))
+  (:use seesaw.core hallway.ui.util))
 
 (defn create-menubar [appstate]
   (let [
@@ -17,9 +17,12 @@
         nutrition-report  (action
                            :name ::nutritionlist )
         edit-doctors      (action
-                           :name ::doctors)
+                           :name ::doctors
+                           :handler (fn [e] (push-to-viewstack :managedoctors (:viewstack appstate)) ))
         edit-rooms        (action
-                           :name ::rooms)
+                           :name ::rooms
+                           :handler (fn [e] (push-to-viewstack :managerooms (:viewstack appstate)) )
+                           )
         menu-bar          (menubar
                            :items [(menu :text ::menu-file
                                          :items [exit-action])

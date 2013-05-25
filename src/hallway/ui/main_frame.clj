@@ -9,7 +9,7 @@
 
 (defn create-app-state [debug]
   {:debug (atom debug)
-   :doctors (atom [])
+   :doctors (atom (doctors/find-all-doctors))
    :viewstack (atom '(:overviewpanel))
    :selected-record-id (atom -1)})
 
@@ -21,7 +21,9 @@
    :size [800 :by 600]
    :menubar (hallway.ui.menubar/create-menubar appstate)
    :content (hallway.ui.main-panel/init appstate)))
-     
+
+(native!)
+
 (defn init
   [debug]
   (let [appstate  (create-app-state debug)

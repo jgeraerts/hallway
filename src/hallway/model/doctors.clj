@@ -1,7 +1,8 @@
 (ns hallway.model.doctors
   (:use [hallway.db :only [ transaction wrap-connection db]])
   (:use [clojure.set :only [map-invert]])
-  (:require [clojure.java.jdbc :as sql]))
+  (:require [clojure.java.jdbc :as sql]
+            [clojure.tools.logging :as log]))
 
 (def
   ^{:private true}
@@ -38,6 +39,7 @@
 
 (defn save-doctor
   [record]
+  (log/debug "saving record " record)
   (let [initials (:initials record)]
     (transaction
      (sql/update-or-insert-values

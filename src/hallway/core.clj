@@ -1,9 +1,10 @@
 (ns hallway.core
   (:gen-class)
-  (:require [hallway db gui]))
+  (:require [hallway db]
+            [hallway.ui main-frame]))
 
 
 (defn -main [& args]
     (hallway.db/create)
-    (hallway.gui/build-gui false))
+    (hallway.ui.main-frame/init false))
 

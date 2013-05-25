@@ -2,7 +2,8 @@
   (:require [hallway.ui
              overview-panel
              manage-doctors-panel
-             manage-rooms-panel]
+             manage-rooms-panel
+             edit-patient-form]
             [seesaw.bind :as b]
             [clojure.tools.logging :as log])
   (:use seesaw.core))
@@ -12,7 +13,9 @@
   (card-panel
    :items
    [[(hallway.ui.overview-panel/init appstate) :overviewpanel]
-    ])
+    [(hallway.ui.edit-patient-form/init appstate) :editform]
+    [(hallway.ui.manage-doctors-panel/init appstate) :managedoctors]
+    [(hallway.ui.manage-rooms-panel/init appstate)   :managerooms]])
   )
 
 (defn init [appstate]

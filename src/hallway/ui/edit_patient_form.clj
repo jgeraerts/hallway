@@ -12,8 +12,7 @@
    {:id 3 :name "Gyneacologische patient"}])
 
 (defn- type-renderer [renderer {:keys [value]}]
-  (apply config! renderer [:text (:name value)])
-  )
+  (apply config! renderer [:text (:name value)]))
 
 (defn- create-form [appstate]
   (mig-panel
