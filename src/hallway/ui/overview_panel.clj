@@ -11,11 +11,14 @@
 
 (defn create-view [appstate]
   {:pre [((complement nil?) appstate)]}
-  (log/info "create-view")
   (let [back-action (actions/back appstate)
         
         new-action (action :icon "icons/add.png"
-                            :handler (fn [e] (push-to-viewstack :editform (:viewstack appstate))))
+                           :handler (fn [e]
+                                      (do 
+                                        (reset! (:selected-record-id appstate) -1)
+                                        (push-to-viewstack :editform
+                                                           (:viewstack appstate)))))
         dismiss-action (action
                         :icon "icons/delete.png"
                         :enabled? false

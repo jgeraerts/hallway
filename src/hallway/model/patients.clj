@@ -11,10 +11,11 @@
                              :gyneacologist :nutrition
                              :caesarian     :surnamebaby
                              :givennamebaby :birthdate
-                             :pediatrician  :roomnumber])]
+                             :pediatrician  :roomnumber
+                             :type])]
     (log/debug "upsert record with id" id "and values" record)
     (transaction
-     (sql/update-or-insert-values :records ["id=?" id] record))))
+     (sql/update-or-insert-values :patients ["id=?" id] record))))
 
 (defn dismiss-patient [id]
   (transaction

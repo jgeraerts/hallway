@@ -35,10 +35,11 @@
       (value! {:initials ""
                :name     ""})))
 
-(defn- new-action []
+(defn- new-action [appstate]
   (action :name "new"
           :handler (fn [e]
                      (clear-input-fields e)
+                     (reset! (:current-doctor-id appstate) -1)
                      (-> e
                          find-doctor-table
                          (selection! nil)))))
@@ -50,6 +51,7 @@
                          find-doctor-pane
                          value
                          trim-values
+                         (assoc :id @(:current-doctor-id appstate))
                          doc/save-doctor)
                      (reset! (:doctors appstate) (doc/find-all-doctors))
                      (clear-input-fields e))))
@@ -75,7 +77,7 @@
                  [(combobox :id :type
                             :model [:gyneacologist :pediatrician]
                             :renderer keyword-renderer)      "wrap"]
-                 [(new-action)              "span,split"]
+                 [(new-action appstate)              "span,split"]
                  [(save-action appstate)    ""]
                  [(close-action appstate)   ""]]))
 
@@ -84,10 +86,9 @@
    :border 5
    :center (edit-doctor-pane appstate)))
 
-
-
 (defn init [appstate]
-  (let [view (create-view appstate)
+  (let [current-doctor-id (atom -1)
+        view (create-view (assoc appstate :current-doctor-id current-doctor-id))
         doctortable (select-doctor-table view)]
     (b/bind (:doctors appstate)
             (b/b-do [doctors]
@@ -96,6 +97,10 @@
     (b/bind (b/selection doctortable)
             (b/some identity)
             (b/transform (partial tbl/value-at doctortable))
-            (b/value (select-doctor-pane view)))
-    (load-data-in-table  doctortable @(:doctors appstate))
+            (b/tee 
+             (b/value (select-doctor-pane view))
+             (b/bind
+              (b/transform :id)
+              current-doctor-id)))
+    
     view))

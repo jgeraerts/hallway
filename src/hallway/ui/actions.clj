@@ -16,8 +16,16 @@
             (b/property back-action :enabled?))
     back-action))
 
+(defn- previous-view-handler [appstate e]
+  (goto-previous-view appstate))
+
+(defn cancel-action [appstate]
+  ( action :name "Annuleren"
+           :handler (partial previous-view-handler appstate)))
+
 (defn close-action [appstate]
   (action :name "Close"
-          :handler (fn [e] (goto-previous-view appstate))))
+          :handler (partial previous-view-handler appstate)))
+
 
       

@@ -13,7 +13,8 @@
    (sql/with-query-results rs
      ["SELECT
         ROOMNUMBER
-       FROM ROOMS"]
+       FROM ROOMS
+       ORDER BY ROOMNUMBER"]
      (into [] rs))))
 
 (defn remove-rooms [records]
@@ -22,12 +23,12 @@
    (sql/delete-rows :rooms ["ROOMNUMBER=?" (:roomnumber records)])))
 
 (defn find-rooms-for-patient [id]
-  (sql/with-connection db
+  (wrap-connection
     (sql/with-query-results rs
       [ "SELECT
          ROOM.ROOMNUMBER
         FROM ROOMS ROOM
-        LEFT OUTER JOIN RECORDS R ON R.ROOMNUMBER = ROOM.ROOMNUMBER
+        LEFT OUTER JOIN PATIENTS R ON R.ROOMNUMBER = ROOM.ROOMNUMBER
         WHERE
            R.ID IS NULL
            OR R.ID=?" id]

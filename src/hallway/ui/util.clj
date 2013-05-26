@@ -30,5 +30,5 @@
 
 (defn load-data-in-table [table data]
   (tbl/clear! table)
-  (doseq [d data]
+  (doseq [d (reverse data)]
     (tbl/insert-at! table 0 d)))

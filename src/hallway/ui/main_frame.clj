@@ -9,9 +9,9 @@
 
 (defn create-app-state [debug]
   {:debug (atom debug)
-   :doctors (atom (doctors/find-all-doctors))
+   :doctors (atom [])
    :viewstack (atom '(:overviewpanel))
-   :selected-record-id (atom -1)})
+   :selected-record-id (atom nil)})
 
 (defn create-main-frame [appstate]
   (frame
@@ -22,12 +22,16 @@
    :menubar (hallway.ui.menubar/create-menubar appstate)
    :content (hallway.ui.main-panel/init appstate)))
 
+(defn- load-data [appstate]
+  (reset! (:doctors appstate) (doctors/find-all-doctors)))
+
 (native!)
 
 (defn init
   [debug]
   (let [appstate  (create-app-state debug)
-        main-view (create-main-frame appstate)] 
+        main-view (create-main-frame appstate)]
+    (load-data appstate)
     (invoke-later
      (-> main-view
          pack!

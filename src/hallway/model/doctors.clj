@@ -40,19 +40,22 @@
 (defn save-doctor
   [record]
   (log/debug "saving record " record)
-  (let [initials (:initials record)]
+  (let [id (:id record)]
     (transaction
      (sql/update-or-insert-values
       :doctors
-      ["INITIALS=?" initials]
-      (translate-type-to-sql record)))))
+      ["ID=?" id]
+      (translate-type-to-sql (dissoc record :id))))))
 
 (defn find-all-doctors
   []
   (wrap-connection
    (sql/with-query-results
      rows
-     ["SELECT * FROM DOCTORS WHERE DELETED=FALSE"]
+     ["SELECT *
+       FROM DOCTORS
+       WHERE DELETED=FALSE
+       ORDER BY INITIALS"]
      (doall (map translate-row rows)))))
 
 (defn delete-doctor
