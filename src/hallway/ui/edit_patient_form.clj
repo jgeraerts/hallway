@@ -8,28 +8,27 @@
   (:require [seesaw.bind :as b]
             [clojure.tools.logging :as log]
             [hallway.model.patients :as patient]
+            [hallway.model.doctors  :as doctor]
             [hallway.model.rooms :as room]))
 
 (def types
-  [{:id 0 :name "Vaginale Geboorte"}
-   {:id 1 :name "Sectio"}
-   {:id 2 :name "Observatie"}
-   {:id 3 :name "Gyneacologische patient"}])
+  {0  "Vaginale Geboorte"
+   1  "Sectio"
+   2  "Observatie"
+   3  "Gyneacologische patient"})
 
 (defn- type-renderer [renderer {:keys [value]}]
-  (apply config! renderer [:text (:name value)]))
+  (apply config! renderer [:text (types value)]))
 
 (defn- doctor-renderer [renderer {:keys [value]}]
-  (apply config! renderer [:text (str (:initials value) " - " (:name value))]))
+  (let [doctor (doctor/get-doctor-by-id value)]
+    (apply config! renderer [:text (str (:initials doctor) " - " (:name doctor))])))
 
 (defn- save-handler [appstate e]
   (let [formvalue (value (select (to-root e) [:#editpatientform]))]
     (patient/save-patient
      @(:selected-record-id appstate)
-     (assoc formvalue
-       :gyneacologist (-> formvalue :gyneacologist :id)
-       :pediatrician  (-> formvalue :pediatrician  :id)
-       :type          (-> formvalue :type          :id)))
+     formvalue)
     (load-data-in-table
      (-> e to-root (select [:#patienttable]))
      (patient/load-patient-report))
@@ -43,7 +42,7 @@
    :items [
            [ "Type" "gap 10"]
            [ (combobox :id :type
-                       :model types
+                       :model (into [] (keys types))
                        :renderer type-renderer ) "wrap"]
            [ "Mama" "split, span, gaptop 10"]
            [ :separator "growx, wrap, gaptop 10"]
@@ -95,8 +94,7 @@
    :nutrition "BV"})
 
 (defn load-existing-record [id]
-  {}
-  )
+  (patient/get-patient-by-id id))
 
 (defn transform-id-to-record [id]
   (if (< id 0)
@@ -106,7 +104,6 @@
 (defn init [appstate]
   (let [form (create-form appstate)]
     (b/bind (select form [:#type])
-            (b/transform :id)
             (b/transform (partial contains? [0 1]))
             (b/tee 
              (b/property (select form [:#givennamebaby]) :enabled?)
@@ -119,19 +116,22 @@
             (b/tee
              (b/bind
               (b/transform (partial filter-doctors-by-type :gyneacologist))
+              (b/transform #(into [] (map :id %)))
               (b/property (select form [:#gyneacologist]) :model))
              (b/bind
               (b/transform (partial filter-doctors-by-type :pediatrician))
+              (b/transform #(into [] (map :id %)))
               (b/property (select form [:#pediatrician]) :model ))))
     
     (b/bind (:selected-record-id appstate)
-            (b/transform transform-id-to-record)
-            (b/value form))
-
-    (b/bind (:selected-record-id appstate)
-            (b/transform room/find-rooms-for-patient)
-            (b/property (select form [:#roomnumber]) :model))
-    
-    (listen (select form [:#birthhour]) :focus-gained
-            (fn [e] (config! (to-widget e) :text "" )))
+            (b/filter (complement nil?))
+            (b/tee
+             (b/bind
+              (b/transform room/find-rooms-for-patient)
+              (b/notify-later)
+              (b/property (select form [:#roomnumber]) :model))
+             (b/bind 
+              (b/transform transform-id-to-record)
+              (b/notify-later)
+              (b/value form))))
     form))

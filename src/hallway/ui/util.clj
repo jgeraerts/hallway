@@ -23,12 +23,14 @@
         (log/debug "current viewstack looks like " @viewstack))))
 
 (defn goto-previous-view [appstate]
-  (swap! (:viewstack appstate) rest))
+  (invoke-later 
+   (swap! (:viewstack appstate) rest)))
 
 (defn trim-values [m]
   (into {} (for [[k v] m] [k (if (string? v) (str/trim v) v)])))
 
 (defn load-data-in-table [table data]
-  (tbl/clear! table)
-  (doseq [d (reverse data)]
-    (tbl/insert-at! table 0 d)))
+  (invoke-later 
+   (tbl/clear! table)
+   (doseq [d (reverse data)]
+     (tbl/insert-at! table 0 d))))

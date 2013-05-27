@@ -20,7 +20,7 @@
 (defn dismiss-patient [id]
   (transaction
    (sql/update-values
-    :records ["id=?" id] {:dismissed true :roomnumber nil})))
+    :patients  ["id=?" id] {:dismissed true :roomnumber nil})))
 
 (defn get-patient-by-id [id]
   (sql/with-connection db

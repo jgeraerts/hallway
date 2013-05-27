@@ -58,6 +58,13 @@
        ORDER BY INITIALS"]
      (doall (map translate-row rows)))))
 
+(defn get-doctor-by-id [id]
+  (wrap-connection
+   (sql/with-query-results rs
+     ["SELECT * FROM DOCTORS
+       WHERE ID=? AND DELETED=FALSE" id]
+     (first rs))))
+
 (defn delete-doctor
   [initial]
   (transaction
