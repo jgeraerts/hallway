@@ -1,7 +1,7 @@
 (ns hallway.db
   (:use [clojure.tools.logging :as log])
   (:require [clojure.java.jdbc :as sql])
-  (:import java.lang.IllegalStateException))
+  (:import java.lang.IllegalStateException java.text.SimpleDateFormat))
 
 (def db  {
           :classname   "org.h2.Driver"
@@ -86,7 +86,27 @@
               (str "INSERT INTO MIGRATIONS (id) VALUES (" idx ")")))
             (recur (inc idx)))))))
 
+(defn format-date
+    ([](format-date (java.util.Date.) "yyyy MM dd HH mm ss"))
+    ([x](if (string? x)
+            (format-date (java.util.Date.) x)
+            (format-date x "yyyy MM dd HH mm ss")))
+    ([dt fmt](.format (SimpleDateFormat. fmt) dt)))
+
+
+(defn backup []
+  (let [date (format-date (java.util.Date.) "yyyyMMdd-HHmmss")
+        path (str (System/getProperty "user.home")
+                  "/" ".hallway" "/"
+                  "backups/backup-" date ".zip")]
+    (sql/with-connection db
+      ( sql/do-commands
+        (str  "BACKUP TO '" path "'")))))
 
 (defn query [q]
   (wrap-connection
    (sql/with-query-results rs [q] (into [] rs))))
+
+
+
+

@@ -5,6 +5,7 @@
 
 
 (defn -main [& args]
-    (hallway.db/create)
-    (hallway.ui.main-frame/init false))
+  (hallway.db/backup)
+  (hallway.db/create)
+  (hallway.ui.main-frame/init false))
 
