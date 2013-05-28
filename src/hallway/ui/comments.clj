@@ -10,9 +10,8 @@
           nutritioncomments (comment/find-comments-for-record v :nutritioncomment)
           patientcommentstable   (select root [:#patientlistcomment])
           nutriciancommentstable (select root [:#nutritioncomment])]
-      (invoke-later
-       (util/load-data-in-table patientcommentstable comments)
-       (util/load-data-in-table nutriciancommentstable nutritioncomments)))))
+      (util/load-data-in-table patientcommentstable comments)
+      (util/load-data-in-table nutriciancommentstable nutritioncomments))))
 
 (defn- add-comment-handler [appstate field id e]
   (util/run-in-background

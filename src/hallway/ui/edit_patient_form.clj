@@ -4,12 +4,15 @@
          mig]
         hallway.ui.datechooser
         hallway.ui.actions
-        [hallway.ui.util :only [load-data-in-table goto-previous-view]])
+        [hallway.ui.util :only [run-in-background
+                                load-data-in-table
+                                goto-previous-view]])
   (:require [seesaw.bind :as b]
             [clojure.tools.logging :as log]
             [hallway.model.patients :as patient]
             [hallway.model.doctors  :as doctor]
-            [hallway.model.rooms :as room]))
+            [hallway.model.rooms :as room]
+            [hallway.ui.patienttable :as patienttable]))
 
 (def types
   {0  "Vaginale Geboorte"
@@ -17,22 +20,50 @@
    2  "Observatie"
    3  "Gyneacologische patient"})
 
+(defn create-new-entry []
+  {:type (first types)
+   :surnamemother ""
+   :givennamemother ""
+   :surnamebaby ""
+   :givennamebaby ""
+   :birthdate (java.util.Date.)
+   :birthhour ""
+   :nutrition "BV"})
+
+(defn load-existing-record [id]
+  (patient/get-patient-by-id id))
+
+(defn transform-id-to-record [id]
+  (if (< id 0)
+    (create-new-entry)
+    (load-existing-record id)))
+
+
+(defn- fill-form-for-record [form id]
+  (run-in-background
+   (log/debug "fill form for id " id)
+   (let [rooms (room/find-rooms-for-patient id)
+         roomnumberdropdown (select form [:#roomnumber])
+         record (transform-id-to-record id)]
+     (invoke-later 
+      (config! roomnumberdropdown :model rooms)
+      (value! form record)))))
+
 (defn- type-renderer [renderer {:keys [value]}]
   (apply config! renderer [:text (types value)]))
 
-(defn- doctor-renderer [renderer {:keys [value]}]
-  (let [doctor (doctor/get-doctor-by-id value)]
+(defn- doctor-renderer [appstate renderer {:keys [value]}]
+  (let [doctor (first (filter #(-> %1 :id (= value)) @(:doctors appstate)))]
     (apply config! renderer [:text (str (:initials doctor) " - " (:name doctor))])))
 
 (defn- save-handler [appstate e]
-  (let [formvalue (value (select (to-root e) [:#editpatientform]))]
-    (patient/save-patient
-     @(:selected-record-id appstate)
-     formvalue)
-    (load-data-in-table
-     (-> e to-root (select [:#patienttable]))
-     (patient/load-patient-report))
-    (goto-previous-view appstate)))
+  (run-in-background 
+   (let [formvalue (value (select (to-root e) [:#editpatientform]))]
+     (patient/save-patient
+      @(:selected-record-id appstate)
+      formvalue)
+     (patienttable/refresh-patienttable (to-root e))
+     (goto-previous-view appstate))))
 
 
 (defn- create-form [appstate]
@@ -52,7 +83,7 @@
            [ (text :id :givennamemother) "wrap"]
            [ "Gyneacoloog" "gap 10"]
            [ (combobox :id :gyneacologist
-                       :renderer doctor-renderer
+                       :renderer (partial  doctor-renderer appstate)
                        :model []) "wrap"]
            [ "Baby" "split,span,gaptop 10"]
            [ :separator "growx,wrap,gaptop 10"]
@@ -65,7 +96,7 @@
            [ (text :id :birthhour ) "wrap"]
            [ "Kinderarts" "gap 10"]
            [ (combobox :id :pediatrician
-                       :renderer doctor-renderer
+                       :renderer (partial doctor-renderer appstate)
                        :model [] ) ""]
            [ "Voeding" "gap 10"]
            [ (combobox :id :nutrition
@@ -83,23 +114,6 @@
   (log/debug "filtering doctors " coll "for type " type)
   (into [] (filter #(-> % :type (= type)) coll)))
 
-(defn create-new-entry []
-  {:type (first types)
-   :surnamemother nil
-   :givennamemother nil
-   :surnamebaby nil
-   :givennamebaby nil
-   :birthdate (java.util.Date.)
-   :birthhour nil
-   :nutrition "BV"})
-
-(defn load-existing-record [id]
-  (patient/get-patient-by-id id))
-
-(defn transform-id-to-record [id]
-  (if (< id 0)
-    (create-new-entry)
-    (load-existing-record id)))
 
 (defn init [appstate]
   (let [form (create-form appstate)]
@@ -125,13 +139,5 @@
     
     (b/bind (:selected-record-id appstate)
             (b/filter (complement nil?))
-            (b/tee
-             (b/bind
-              (b/transform room/find-rooms-for-patient)
-              (b/notify-later)
-              (b/property (select form [:#roomnumber]) :model))
-             (b/bind 
-              (b/transform transform-id-to-record)
-              (b/notify-later)
-              (b/value form))))
+            (b/b-do [v] (fill-form-for-record form v)))
     form))

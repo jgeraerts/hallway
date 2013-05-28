@@ -27,7 +27,10 @@
       (util/push-to-viewstack :editform (:viewstack appstate)))))
 
 (defn refresh-patienttable [view]
-  (load-data-in-table (select view [:#patienttable]) (patient/load-patient-report))  )
+  (util/run-in-background 
+   (let [data (patient/load-patient-report)]
+     (load-data-in-table (select view [:#patienttable])
+                         data))))
 
 (defn init [appstate]
   (let [view (create-view)
@@ -35,9 +38,8 @@
     (b/bind
      (b/selection patienttable)
      (b/transform #(-> (tbl/value-at patienttable %) :id))
-     (b/b-do [id]
-           (util/run-in-background
-            (reset! (:selected-record-id appstate) id))))
+     (b/transform #(if (nil? %1) -1 (identity %1)))
+     (:selected-record-id appstate))
     
     (listen patienttable :mouse-clicked (partial click-handler appstate))
     (refresh-patienttable view)    
