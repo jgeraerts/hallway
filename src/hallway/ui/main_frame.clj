@@ -34,5 +34,5 @@
     (load-data appstate)
     (invoke-later
      (-> main-view
-         pack!
+
          show!))))

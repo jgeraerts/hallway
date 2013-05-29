@@ -12,7 +12,10 @@
                              :caesarian     :surnamebaby
                              :givennamebaby :birthdate
                              :pediatrician  :roomnumber
-                             :type])]
+                             :type          :nutritionamount
+                             :nutritionpercent :nutritionadditives
+                             :pediatricianfirsttime
+                             :pediatricianhome])]
     (log/debug "upsert record with id" id "and values" record)
     (transaction
      (sql/update-or-insert-values :patients ["id=?" id] record))))
@@ -36,12 +39,14 @@
           ROOM.ROOMNUMBER,
           R.SURNAMEMOTHER || ' ' || R.GIVENNAMEMOTHER AS NAME,
           R.SURNAMEBABY   || ' ' || R.GIVENNAMEBABY   AS BABYNAME,
-          R.GYNEACOLOGIST AS DOCTOR,
-          R.PEDIATRICIAN AS PEDIATRICIAN,
+          G.INITIALS AS DOCTOR,
+          P.INITIALS AS PEDIATRICIAN,
           DECODE(R.TYPE, 3 , 'G', 2 , 'O' , 1, 'S', 0, 'D')
                  || ' '
                  || DATEDIFF('DAY',R.BIRTHDATE,CURRENT_DATE)  AS DAY
         FROM PATIENTS R
+        INNER JOIN DOCTORS P ON P.ID=R.PEDIATRICIAN
+        INNER JOIN DOCTORS G ON G.ID=R.GYNEACOLOGIST
         RIGHT OUTER JOIN ROOMS ROOM ON ROOM.ROOMNUMBER = R.ROOMNUMBER"]
       (into [] rs))))
 

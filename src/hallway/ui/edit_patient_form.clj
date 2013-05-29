@@ -28,7 +28,12 @@
    :givennamebaby ""
    :birthdate (java.util.Date.)
    :birthhour ""
-   :nutrition "BV"})
+   :nutrition "BV"
+   :nutritionamount ""
+   :nutritionpercent ""
+   :nutritionadditives ""
+   :pediatricianfirsttime false
+   :pediatricianhome      false})
 
 (defn load-existing-record [id]
   (patient/get-patient-by-id id))
@@ -38,6 +43,11 @@
     (create-new-entry)
     (load-existing-record id)))
 
+(defn- set-checkbox! [form record key]
+  (let [value (key record)
+        selector (keyword (str "#" (subs (str key) 1)))
+        cb    (select form [selector])]
+    (config! cb :selected? value)))
 
 (defn- fill-form-for-record [form id]
   (run-in-background
@@ -47,7 +57,9 @@
          record (transform-id-to-record id)]
      (invoke-later 
       (config! roomnumberdropdown :model rooms)
-      (value! form record)))))
+      (value! form record)
+      (set-checkbox! form record :pediatricianfirsttime)
+      (set-checkbox! form record :pediatricianhome)))))
 
 (defn- type-renderer [renderer {:keys [value]}]
   (apply config! renderer [:text (types value)]))
@@ -78,18 +90,18 @@
            [ "Mama" "split, span, gaptop 10"]
            [ :separator "growx, wrap, gaptop 10"]
            [ "Naam" "gap 10" ]
-           [ (text :id :surnamemother) ""]
+           [ (text :id :surnamemother :columns 255) ""]
            [ "Voornaam" "gap 10"]
-           [ (text :id :givennamemother) "wrap"]
+           [ (text :id :givennamemother :columns 255) "wrap"]
            [ "Gyneacoloog" "gap 10"]
            [ (combobox :id :gyneacologist
                        :renderer (partial  doctor-renderer appstate)
                        :model []) "wrap"]
            [ "Baby" "split,span,gaptop 10"]
            [ :separator "growx,wrap,gaptop 10"]
-           [ "Naam" "gap 10"] [ (text :id :surnamebaby) ""]
+           [ "Naam" "gap 10"] [ (text :id :surnamebaby :columns 255 ) ""]
            [ "Voornaam" "gap 10"]
-           [ (text :id :givennamebaby) "wrap"]
+           [ (text :id :givennamebaby :columns 255) "wrap"]
            [ "Geboortedatum" "gap 10"]
            [ (date-chooser :id :birthdate) ""]
            [ "Geboorteuur" "gap 10"]
@@ -98,10 +110,19 @@
            [ (combobox :id :pediatrician
                        :renderer (partial doctor-renderer appstate)
                        :model [] ) ""]
+           [ (checkbox :id :pediatricianfirsttime :text "1x gezien") "skip,wrap"]
+           [ (checkbox :id :pediatricianhome      :text "Naar huis") "skip 3,wrap"]
+           [ "Voeding" "split,span,gaptop 10"]
+           [ :separator "growx,wrap,gaptop 10"]
            [ "Voeding" "gap 10"]
            [ (combobox :id :nutrition
-                       :model ["BV" "KV/Nutrilon " "KV/Nan"]) "wrap"]
-
+                       :model ["BV" "KV/Nutrilon " "KV/Nan"]) ""]
+           [ "Hoeveelheid" ""]
+           [ (text     :id :nutritionamount :columns 255)     "wrap"]
+           [ "Toevoeging"  ""]
+           [ (text     :id :nutritionadditives :columns 255) ""]
+           [ "Percentage"  ""]
+           [ (text     :id :nutritionpercent   :columns 255) "wrap"]
            [ "Ziekenhuis" "split,span,gaptop 10"]
            [ :separator "growx,wrap,gaptop 10"]              
            [ "Kamer" "gap 10"]
