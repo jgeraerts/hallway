@@ -15,7 +15,9 @@
                            :handler
                            (fn [e] (report/load-report "patientenlijst.jrxml")))
         nutrition-report  (action
-                           :name ::nutritionlist )
+                           :name ::nutritionlist
+                           :handler
+                           (fn [e] (report/load-report "nutritionreport.jrxml")))
         edit-doctors      (action
                            :name ::doctors
                            :handler (fn [e] (push-to-viewstack :managedoctors (:viewstack appstate)) ))

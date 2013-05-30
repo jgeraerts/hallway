@@ -4,7 +4,7 @@
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
 	<queryString>
-		<![CDATA[SELECT ROOM.ROOMNUMBER, G.INITIALS AS DOCTOR, T.DAY, T.NAME, T.NUTRITION, C.COMMENT, T.BABYNAME
+		<![CDATA[SELECT ROOM.ROOMNUMBER, G.INITIALS, T.DAY, G.INITIALS AS DOCTOR, T.NAME, T.NUTRITION, C.COMMENT, T.BABYNAME
 FROM (
   SELECT
           R.ID,
@@ -33,19 +33,23 @@ FROM (
   WHERE R.TYPE IN (2)
         AND R.DISMISSED = false
 ) AS t
-RIGHT OUTER JOIN ROOMS ROOM ON ROOM.ROOMNUMBER=T.ROOMNUMBER
-LEFT  OUTER JOIN DOCTORS G ON G.ID = T.GYNEACOLOGIST
+JOIN DOCTORS G ON G.ID = T.GYNEACOLOGIST
 LEFT JOIN COMMENTS c on c.recordid=T.id
 LEFT JOIN (
   SELECT recordid,MAX(commentdate) AS commentdate
   FROM COMMENTS
-  GROUP BY recordid) GC ON ( gc.recordid = t.id and gc.commentdate = c.commentdate)]]>
+  WHERE COMMENTTYPE=0
+  GROUP BY recordid) GC ON ( gc.recordid = t.id and gc.commentdate = c.commentdate)
+RIGHT OUTER JOIN ROOMS ROOM ON ROOM.ROOMNUMBER=T.ROOMNUMBER]]>
 	</queryString>
 	<field name="ROOMNUMBER" class="java.lang.String">
 		<fieldDescription><![CDATA[]]></fieldDescription>
 	</field>
-	<field name="DOCTOR" class="java.lang.String"/>
+	<field name="INITIALS" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
 	<field name="DAY" class="java.lang.String"/>
+	<field name="DOCTOR" class="java.lang.String"/>
 	<field name="NAME" class="java.lang.String"/>
 	<field name="NUTRITION" class="java.lang.String"/>
 	<field name="COMMENT" class="java.lang.String">
